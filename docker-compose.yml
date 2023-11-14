@@ -61,8 +61,6 @@ services:
     volumes:
     - ./data/readviz:/readviz
     - ./data/seqr_static_files:/seqr_static_files
-    ports:
-      - 80:8000
     environment:
       - SEQR_GIT_BRANCH=dev
       - PYTHONPATH=/seqr
@@ -87,6 +85,19 @@ services:
     healthcheck:
       test: bash -c "curl -s 'http://localhost:8000' | grep html"
 
+  nginx:
+    image: nginx:stable
+    volumes:
+    - ./deploy/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    - ./data/nginx/nginx.crt:/etc/ssl/nginx/nginx.crt:ro
+    - ./data/nginx/nginx.key:/etc/ssl/nginx/nginx.key:ro
+    ports:
+      - 443:443
+    depends_on:
+      seqr:
+        condition: service_healthy
+    healthcheck:
+      test: bash -c "curl -ks 'https://localhost' | grep html"
 
   pipeline-runner:
     image: gcr.io/seqr-project/pipeline-runner:gcloud-prod
